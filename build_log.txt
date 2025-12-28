@@ -1,0 +1,6 @@
+
+> smart-route-app@0.0.0 build
+> tsc && vite build
+
+src/components/ProfileSelector.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/components/RouteList.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
