@@ -4,43 +4,38 @@ interface LatLng {
 }
 
 const OVERPASS_API_URL = "https://overpass-api.de/api/interpreter";
-
-// In-memory cache to ensure consistency during the session
-const lightingCache: Record<string, number> = {};
+const lightingCache = new Map<string, number>();
 
 /**
- * Fetches lighting score based on OSM data (lit tag and highway types)
- * Returns a consistent score (0-10) for the same route path
+ * Fetches lighting score based on OSM data
+ * Uses explicit "lit" tags when available, falls back to road-type heuristics
+ * Returns a score (2-10)
+ * Now includes caching and retries to improved consistency.
  */
 export const fetchLightingScore = async (path: LatLng[]): Promise<number> => {
-    if (!path || path.length === 0) return 5;
+    if (!path || path.length === 0) {
+        console.warn("Empty path provided to fetchLightingScore");
+        return 5;
+    }
 
-    // 1. GENERATE CACHE KEY
-    // Use first, middle, and last points to uniquely identify the route path
-    const p1 = path[0];
-    const p2 = path[Math.floor(path.length / 2)];
-    const p3 = path[path.length - 1];
+    // Sample points along the route for analysis
+    const samples = samplePoints(path, 15); // Increased from 10 to 15 for better accuracy
 
-    // Convert to lat/lng numbers clearly
-    const getLat = (p: any) => typeof p.lat === 'function' ? p.lat() : p.lat;
-    const getLng = (p: any) => typeof p.lng === 'function' ? p.lng() : p.lng;
+    // Generate a stable cache key based on the sampled points
+    const cacheKey = JSON.stringify(samples.map(p => `${p.lat.toFixed(4)},${p.lng.toFixed(4)}`));
 
-    const cacheKey = `light-${getLat(p1).toFixed(4)}-${getLng(p1).toFixed(4)}-${getLat(p2).toFixed(4)}-${getLat(p3).toFixed(4)}`;
-
-    if (lightingCache[cacheKey] !== undefined) {
-        return lightingCache[cacheKey];
+    if (lightingCache.has(cacheKey)) {
+        return lightingCache.get(cacheKey)!;
     }
 
     try {
-        // 2. SAMPLE POINTS
-        const samples = samplePoints(path, 10);
-
-        // 3. CONSTRUCT QUERY
+        // Construct Overpass query to fetch highway data
         let queryParts = "";
         samples.forEach(pt => {
             const lat = Number(pt.lat.toFixed(4));
             const lng = Number(pt.lng.toFixed(4));
-            queryParts += `way(around:60,${lat},${lng})["highway"];`;
+            // Increased radius from 60m to 100m to catch more roads
+            queryParts += `way(around:100,${lat},${lng})["highway"];`;
         });
 
         const query = `
@@ -51,28 +46,56 @@ export const fetchLightingScore = async (path: LatLng[]): Promise<number> => {
             out tags;
         `;
 
-        // 4. FETCH
-        const response = await fetch(OVERPASS_API_URL, {
-            method: 'POST',
-            body: query
-        });
+        // Retry logic with exponential backoff
+        let response;
+        let attempts = 0;
+        const maxAttempts = 3;
 
-        if (!response.ok) return 5;
+        while (attempts < maxAttempts) {
+            try {
+                response = await fetch(OVERPASS_API_URL, {
+                    method: 'POST',
+                    body: query
+                });
+
+                if (response.ok) break;
+
+                // If rate limited (429) or server error (5xx), wait and retry
+                if (response.status === 429 || response.status >= 500) {
+                    throw new Error(`API Error ${response.status}`);
+                }
+
+                // If client error (4xx), don't retry, just break
+                break;
+            } catch (err) {
+                attempts++;
+                if (attempts === maxAttempts) throw err;
+                // Wait 1s, 2s, 4s...
+                await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempts - 1)));
+            }
+        }
+
+        if (!response || !response.ok) {
+            console.warn("OSM API request failed after retries");
+            return 5;
+        }
+
         const data = await response.json();
         const elements = data.elements || [];
 
         if (elements.length === 0) {
-            lightingCache[cacheKey] = 3;
-            return 3;
+            console.warn("No OSM highway data found for route");
+            lightingCache.set(cacheKey, 4);
+            return 4; // Slightly lower default for unknown areas
         }
 
-        // 5. DEDUPLICATE OSM ELEMENTS
+        // Deduplicate OSM elements by ID
         const uniqueElements = new Map<number, any>();
         elements.forEach((el: any) => {
             if (el.id) uniqueElements.set(el.id, el);
         });
 
-        // 6. SCORE CALCULATION
+        // Calculate lighting score based on explicit OSM lit tags + Road Type Heuristics
         let totalScore = 0;
         let count = 0;
 
@@ -81,46 +104,83 @@ export const fetchLightingScore = async (path: LatLng[]): Promise<number> => {
             const lit = tags.lit;
             const highway = tags.highway;
 
-            let score = 5;
-            if (lit === 'yes' || lit === '24/7' || lit === 'automatic' || lit === 'stay_on') {
-                score = 10;
-            } else if (lit === 'no') {
-                score = 2;
+            let score = 5; // Default: unknown/no data
+
+            // 1. Explicit lighting tags (Highest Priority)
+            if (lit === 'yes') {
+                score = 10; // Well-lit
+            } else if (lit === '24/7' || lit === 'automatic' || lit === 'stay_on') {
+                score = 10; // Always lit
+            } else if (lit === 'limited' || lit === 'interval') {
+                score = 6; // Partially lit
+            } else if (lit === 'sunset-sunrise' || lit === 'dusk-dawn') {
+                score = 7; // Lit during night hours
+            } else if (lit === 'no' || lit === 'disused') {
+                score = 2; // Not lit
             } else {
+                // 2. Heuristics based on road type (Fallback)
                 switch (highway) {
                     case 'motorway':
+                    case 'motorway_link':
                     case 'trunk':
-                    case 'primary': score = 9; break;
+                    case 'trunk_link':
+                    case 'primary':
+                    case 'primary_link':
+                        score = 9; // Major roads usually lit
+                        break;
                     case 'secondary':
-                    case 'tertiary': score = 7; break;
-                    case 'residential': score = 6; break;
+                    case 'secondary_link':
+                        score = 8;
+                        break;
+                    case 'tertiary':
+                    case 'tertiary_link':
+                        score = 7;
+                        break;
+                    case 'residential':
+                    case 'living_street':
                     case 'pedestrian':
-                    case 'footway': score = 4; break;
-                    default: score = 3;
+                        score = 6; // Usually have streetlights
+                        break;
+                    case 'service':
+                    case 'track':
+                        score = 3; // Likely unlit
+                        break;
+                    default:
+                        score = 5; // Unknown
                 }
             }
+
             totalScore += score;
             count++;
         });
 
-        const finalScore = count > 0 ? Math.round(totalScore / count) : 5;
-        const clampedScore = Math.max(2, Math.min(10, finalScore));
+        // Calculate average and clamp to valid range
+        const avgScore = count > 0 ? Math.round(totalScore / count) : 5;
+        const finalScore = Math.max(2, Math.min(10, avgScore));
 
-        // Save to cache
-        lightingCache[cacheKey] = clampedScore;
-        return clampedScore;
+        console.log(`Lighting score calculated: ${finalScore} (from ${count} road segments, raw OSM data only)`);
+
+        // Cache the successful result
+        lightingCache.set(cacheKey, finalScore);
+
+        return finalScore;
 
     } catch (error) {
         console.error("OSM Lighting fetch failed:", error);
-        return 5;
+        return 5; // Safe default on error
     }
 };
 
+/**
+ * Sample evenly distributed points along a path
+ */
 function samplePoints(path: LatLng[], count: number): LatLng[] {
-    if (path.length <= count) return path.map(p => ({
-        lat: typeof p.lat === 'function' ? (p as any).lat() : p.lat,
-        lng: typeof p.lng === 'function' ? (p as any).lng() : p.lng
-    }));
+    if (path.length <= count) {
+        return path.map(p => ({
+            lat: typeof p.lat === 'function' ? (p as any).lat() : p.lat,
+            lng: typeof p.lng === 'function' ? (p as any).lng() : p.lng
+        }));
+    }
 
     const samples: LatLng[] = [];
     const step = (path.length - 1) / (count - 1);
