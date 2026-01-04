@@ -7,16 +7,18 @@ import { RouteList } from './components/RouteList';
 import { ProfileSelector } from './components/ProfileSelector';
 import { MapComponent } from './components/MapComponent';
 import { Route, DrivingProfile } from './types';
-import { PROFILES, fetchRoutes, rankRoutes } from './services/routeService';
+import { PROFILES, fetchRoutes, rankRoutes, enhanceWithExplorerData } from './services/routeService';
 import { geocodeLocation } from './services/geocodingService';
+import { seedTouristSpots } from './scripts/seedDatabase';
 
 const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+const LIBRARIES: ("places" | "geometry" | "drawing" | "visualization")[] = ['places', 'geometry'];
 
 function App() {
     const { isLoaded } = useJsApiLoader({
         id: 'google-map-script',
         googleMapsApiKey,
-        libraries: ['places', 'geometry']
+        libraries: LIBRARIES
     });
 
     const [routes, setRoutes] = useState<Route[]>([]);
@@ -50,11 +52,15 @@ function App() {
                 travelDate
             );
 
-            const enrichedRoutes = fetchedRoutes.map(r => ({
+            let enrichedRoutes = fetchedRoutes.map(r => ({
                 ...r,
                 source: sourceLoc.display_name,
                 destination: destLoc.display_name
             }));
+
+            // Integrate Explorer Data if available
+            // This is non-blocking to show routes fast, but for this demo we wait to show scores
+            enrichedRoutes = await enhanceWithExplorerData(enrichedRoutes);
 
             const ranked = rankRoutes(enrichedRoutes, selectedProfile, travelTime);
             setRoutes(ranked);
@@ -129,6 +135,19 @@ function App() {
                             <p className="text-xs text-gray-500 font-medium dark:text-gray-400">Intelligent Route Planning</p>
                         </div>
                     </div>
+
+                    {/* Seed Button (Demo) */}
+                    <button
+                        onClick={() => {
+                            if (confirm("Seed database with Tamil Nadu tourist spots? (Requires valid Firebase keys)")) {
+                                seedTouristSpots();
+                            }
+                        }}
+                        className="p-2 mr-2 rounded-full bg-green-100 text-green-700 hover:bg-green-200 transition-colors"
+                        title="Seed DB"
+                    >
+                        🌱
+                    </button>
 
                     {/* Dark Mode Toggle */}
                     <button

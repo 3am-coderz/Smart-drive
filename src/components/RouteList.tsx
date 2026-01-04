@@ -62,7 +62,17 @@ export function RouteList({ routes, selectedProfile, selectedRouteId, onSelectRo
 
                             <div className="flex justify-between items-start mb-4">
                                 <div>
-                                    <h4 className={clsx("font-bold text-lg mb-1", isSelected ? "text-gray-900 dark:text-white" : "text-gray-900 dark:text-slate-100")}>{route.roadType} Route</h4>
+                                    <div className="flex items-center flex-wrap gap-2 mb-1">
+                                        <h4 className={clsx("font-bold text-lg", isSelected ? "text-gray-900 dark:text-white" : "text-gray-900 dark:text-slate-100")}>
+                                            {route.roadType} Route
+                                        </h4>
+                                        {route.explorerScore !== undefined && (
+                                            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700 flex items-center gap-1">
+                                                <Award size={10} />
+                                                Explorer: {route.explorerScore}
+                                            </span>
+                                        )}
+                                    </div>
                                     <p className="text-gray-500 dark:text-gray-400 text-sm">{route.description}</p>
                                 </div>
                                 <div className="text-right">
@@ -120,13 +130,17 @@ export function RouteList({ routes, selectedProfile, selectedRouteId, onSelectRo
                                         {[...Array(5)].map((_, i) => (
                                             <div key={i} className={clsx(
                                                 "w-1.5 h-4 rounded-full transition-all",
-                                                i < Math.floor(route.lightingScore / 2)
-                                                    ? "bg-gradient-to-t from-yellow-500 to-yellow-400 shadow-sm"
+                                                i < Math.floor((route.lightingScore || 0) / 2)
+                                                    ? "bg-gradient-to-t from-yellow-500 to-amber-400 shadow-sm"
                                                     : "bg-gray-200 dark:bg-slate-600"
                                             )} />
                                         ))}
                                     </div>
                                 </div>
+                            </div>
+
+                            <div className="text-xs text-gray-500 font-medium mb-4">
+                                {route.explorerExplanation ? route.explorerExplanation : reason}
                             </div>
 
                             {/* Weather Info */}

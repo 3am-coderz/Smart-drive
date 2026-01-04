@@ -113,6 +113,38 @@ export const fetchRoutes = async (sourceCoords: { lat: number, lon: number }, de
     }
 };
 
+// Lazy import to avoid circular dependency issues if any, or just standard import
+import { findExplorerRoute } from './explorerService';
+
+export const enhanceWithExplorerData = async (routes: Route[]): Promise<Route[]> => {
+    try {
+        console.log("Fetching Explorer data for routes...");
+        const explorerResults = await findExplorerRoute(routes.map(r => ({
+            id: r.id,
+            overview_polyline: r.googleRoute?.overview_polyline,
+            path: r.googleRoute?.overview_path?.map(p => ({ lat: p.lat(), lng: p.lng() }))
+        })));
+
+        // Merge results back
+        return routes.map(route => {
+            const result = explorerResults.find(res => res.routeId === route.id);
+            if (result) {
+                return {
+                    ...route,
+                    explorerScore: result.explorerScore,
+                    explorerExplanation: result.explanation,
+                    totalPOIs: result.totalPOIsFound
+                };
+            }
+            return route;
+        });
+    } catch (error) {
+        console.warn("Explorer Service failed (likely missing Firebase keys):", error);
+        return routes;
+    }
+}
+
+
 export const rankRoutes = (routes: Route[], profile: DrivingProfile, travelTime: string = "20:00"): Route[] => {
     const isDay = isDaytime(travelTime);
 
@@ -124,7 +156,15 @@ export const rankRoutes = (routes: Route[], profile: DrivingProfile, travelTime:
 
     return [...routes].sort((a, b) => {
         if (profile.id === 'fast') return a.eta - b.eta;
-        if (profile.id === 'scenic') return b.eta - a.eta;
+
+        if (profile.id === 'scenic') {
+            // If explorer data exists, use it. Otherwise fall back to duration (longer = better scenic? or just default)
+            if (a.explorerScore !== undefined && b.explorerScore !== undefined) {
+                return b.explorerScore - a.explorerScore;
+            }
+            return b.eta - a.eta;
+        }
+
         if (profile.id === 'safe') {
             // Day: Activity only. Night: Activity + Lighting
             const safetyA = a.activityScore * effectiveWeights.activity + a.lightingScore * effectiveWeights.lighting;

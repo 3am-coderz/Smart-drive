@@ -5,6 +5,58 @@ export interface LatLng {
 
 const OVERPASS_API_URL = "https://overpass-api.de/api/interpreter";
 const lightingCache = new Map<string, number>();
+const cityCache = new Map<string, CityResult[]>(); // Cache for cities
+
+// Simple rate limiter implementation
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+class RateLimiter {
+    private queue: (() => Promise<any>)[] = [];
+    private isProcessing = false;
+    private lastRequestTime = 0;
+    private minInterval = 2000; // 2 seconds between requests
+
+    async enqueue<T>(task: () => Promise<T>): Promise<T> {
+        return new Promise((resolve, reject) => {
+            this.queue.push(async () => {
+                try {
+                    const result = await task();
+                    resolve(result);
+                } catch (error) {
+                    reject(error);
+                }
+            });
+            this.process();
+        });
+    }
+
+    private async process() {
+        if (this.isProcessing || this.queue.length === 0) return;
+        this.isProcessing = true;
+
+        while (this.queue.length > 0) {
+            const now = Date.now();
+            const timeSinceLast = now - this.lastRequestTime;
+
+            if (timeSinceLast < this.minInterval) {
+                await delay(this.minInterval - timeSinceLast);
+            }
+
+            const task = this.queue.shift();
+            if (task) {
+                try {
+                    this.lastRequestTime = Date.now();
+                    await task();
+                } catch (e) {
+                    console.error("RateLimiter task failed", e);
+                }
+            }
+        }
+        this.isProcessing = false;
+    }
+}
+
+const overpassLimiter = new RateLimiter();
 
 /**
  * Fetches lighting score based on OSM data
@@ -47,21 +99,22 @@ export const fetchLightingScore = async (path: LatLng[]): Promise<number> => {
         `;
 
         // Retry logic with exponential backoff
-        let response;
+        let response: Response | undefined;
         let attempts = 0;
         const maxAttempts = 3;
 
         while (attempts < maxAttempts) {
             try {
-                response = await fetch(OVERPASS_API_URL, {
+                // Use the rate limiter
+                response = await overpassLimiter.enqueue(() => fetch(OVERPASS_API_URL, {
                     method: 'POST',
                     body: query
-                });
+                }));
 
-                if (response.ok) break;
+                if (response && response.ok) break;
 
                 // If rate limited (429) or server error (5xx), wait and retry
-                if (response.status === 429 || response.status >= 500) {
+                if (response && (response.status === 429 || response.status >= 500)) {
                     throw new Error(`API Error ${response.status}`);
                 }
 
@@ -225,18 +278,30 @@ export const findCitiesAlongRoute = async (path: LatLng[]): Promise<CityResult[]
         queryParts += `node["place"~"city|town"](around:10000,${lat},${lng});`;
     });
 
+    const cacheKey = JSON.stringify(samples.map(p => `${p.lat.toFixed(2)},${p.lng.toFixed(2)}`)); // Coarser key for city cache
+    if (cityCache.has(cacheKey)) {
+        return cityCache.get(cacheKey)!;
+    }
+
     const query = `
-        [out:json][timeout:15];
-        (
-            ${queryParts}
-        );
-        out body;
-    `;
+            [out:json][timeout:25];
+            (
+                ${queryParts}
+            );
+            out body;
+        `;
 
     try {
-        const response = await fetch(OVERPASS_API_URL, {
-            method: 'POST',
-            body: query
+        const response = await overpassLimiter.enqueue(async () => {
+            const res = await fetch(OVERPASS_API_URL, {
+                method: 'POST',
+                body: query
+            });
+
+            if (res.status === 429) {
+                throw new Error("Overpass rate limit exceeded");
+            }
+            return res;
         });
 
         if (!response.ok) return [];
@@ -260,7 +325,9 @@ export const findCitiesAlongRoute = async (path: LatLng[]): Promise<CityResult[]
         });
 
         // Convert to array and limit to 3 distinct cities
-        return Array.from(uniqueCities.values()).slice(0, 3);
+        const result = Array.from(uniqueCities.values()).slice(0, 3);
+        cityCache.set(cacheKey, result);
+        return result;
 
     } catch (error) {
         console.error("Failed to find cities along route:", error);

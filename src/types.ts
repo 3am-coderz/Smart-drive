@@ -28,6 +28,11 @@ export interface Route {
     roadType: RoadType;
     description: string;
     weather?: RouteWeather;
+    // Explorer Route Data
+    explorerScore?: number;
+    explorerExplanation?: string;
+    totalPOIs?: number;
+
     // Store the underlying Google Maps direction route object for rendering
     googleRoute?: google.maps.DirectionsRoute;
 }
