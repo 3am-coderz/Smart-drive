@@ -66,12 +66,6 @@ export function RouteList({ routes, selectedProfile, selectedRouteId, onSelectRo
                                         <h4 className={clsx("font-bold text-lg", isSelected ? "text-gray-900 dark:text-white" : "text-gray-900 dark:text-slate-100")}>
                                             {route.roadType} Route
                                         </h4>
-                                        {route.explorerScore !== undefined && (
-                                            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700 flex items-center gap-1">
-                                                <Award size={10} />
-                                                Explorer: {route.explorerScore}
-                                            </span>
-                                        )}
                                     </div>
                                     <p className="text-gray-500 dark:text-gray-400 text-sm">{route.description}</p>
                                 </div>
@@ -79,7 +73,7 @@ export function RouteList({ routes, selectedProfile, selectedRouteId, onSelectRo
                                     <div className="text-3xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                                         {route.eta}
                                     </div>
-                                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">minutes</span>
+                                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-200 uppercase">minutes</span>
                                 </div>
                             </div>
 
@@ -144,50 +138,52 @@ export function RouteList({ routes, selectedProfile, selectedRouteId, onSelectRo
                             </div>
 
                             {/* Weather Info */}
-                            {route.weather && (
-                                <div className="mb-4">
-                                    <h5 className="text-[10px] text-gray-400 font-bold mb-2 uppercase tracking-wider">Weather Conditions</h5>
-                                    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-slate-700">
-                                        {/* Origin */}
-                                        <div className="flex flex-col items-center p-2 bg-slate-50 dark:bg-slate-700 rounded-xl border border-slate-100 dark:border-slate-600 min-w-[70px] flex-shrink-0">
-                                            <span className="text-[10px] text-gray-400 font-bold mb-1 truncate max-w-full">Origin</span>
-                                            <div className="flex items-center gap-1.5">
-                                                {getWeatherIcon(route.weather.origin.code)}
-                                                <span className="text-xs font-bold text-gray-700 dark:text-gray-200">{route.weather.origin.temp}°</span>
-                                            </div>
-                                        </div>
-
-                                        {/* Cities along route */}
-                                        {route.weather.waypoints && route.weather.waypoints.length > 0 ? (
-                                            route.weather.waypoints.map((wp, idx) => (
-                                                <div key={idx} className="flex flex-col items-center p-2 bg-slate-50 dark:bg-slate-700 rounded-xl border border-slate-100 dark:border-slate-600 min-w-[80px] flex-shrink-0">
-                                                    <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-semibold mb-1 truncate max-w-[75px]" title={wp.name}>
-                                                        {wp.name.split(',')[0]}
-                                                    </span>
-                                                    <div className="flex items-center gap-1.5">
-                                                        {getWeatherIcon(wp.data.code)}
-                                                        <span className="text-xs font-bold text-gray-700 dark:text-gray-200">{wp.data.temp}°</span>
-                                                    </div>
-                                                </div>
-                                            ))
-                                        ) : (
+                            {
+                                route.weather && (
+                                    <div className="mb-4">
+                                        <h5 className="text-[10px] text-gray-400 font-bold mb-2 uppercase tracking-wider">Weather Conditions</h5>
+                                        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-slate-700">
+                                            {/* Origin */}
                                             <div className="flex flex-col items-center p-2 bg-slate-50 dark:bg-slate-700 rounded-xl border border-slate-100 dark:border-slate-600 min-w-[70px] flex-shrink-0">
-                                                <span className="text-[10px] text-gray-400 font-bold mb-1">Route</span>
-                                                <span className="text-xs text-gray-400">--</span>
+                                                <span className="text-[10px] text-gray-400 font-bold mb-1 truncate max-w-full">Origin</span>
+                                                <div className="flex items-center gap-1.5">
+                                                    {getWeatherIcon(route.weather.origin.code)}
+                                                    <span className="text-xs font-bold text-gray-700 dark:text-gray-200">{route.weather.origin.temp}°</span>
+                                                </div>
                                             </div>
-                                        )}
 
-                                        {/* Destination */}
-                                        <div className="flex flex-col items-center p-2 bg-slate-50 dark:bg-slate-700 rounded-xl border border-slate-100 dark:border-slate-600 min-w-[70px] flex-shrink-0">
-                                            <span className="text-[10px] text-gray-400 font-bold mb-1 truncate max-w-full">Dest</span>
-                                            <div className="flex items-center gap-1.5">
-                                                {getWeatherIcon(route.weather.destination.code)}
-                                                <span className="text-xs font-bold text-gray-700 dark:text-gray-200">{route.weather.destination.temp}°</span>
+                                            {/* Cities along route */}
+                                            {route.weather.waypoints && route.weather.waypoints.length > 0 ? (
+                                                route.weather.waypoints.map((wp, idx) => (
+                                                    <div key={idx} className="flex flex-col items-center p-2 bg-slate-50 dark:bg-slate-700 rounded-xl border border-slate-100 dark:border-slate-600 min-w-[80px] flex-shrink-0">
+                                                        <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-semibold mb-1 truncate max-w-[75px]" title={wp.name}>
+                                                            {wp.name.split(',')[0]}
+                                                        </span>
+                                                        <div className="flex items-center gap-1.5">
+                                                            {getWeatherIcon(wp.data.code)}
+                                                            <span className="text-xs font-bold text-gray-700 dark:text-gray-200">{wp.data.temp}°</span>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="flex flex-col items-center p-2 bg-slate-50 dark:bg-slate-700 rounded-xl border border-slate-100 dark:border-slate-600 min-w-[70px] flex-shrink-0">
+                                                    <span className="text-[10px] text-gray-400 font-bold mb-1">Route</span>
+                                                    <span className="text-xs text-gray-400">--</span>
+                                                </div>
+                                            )}
+
+                                            {/* Destination */}
+                                            <div className="flex flex-col items-center p-2 bg-slate-50 dark:bg-slate-700 rounded-xl border border-slate-100 dark:border-slate-600 min-w-[70px] flex-shrink-0">
+                                                <span className="text-[10px] text-gray-400 font-bold mb-1 truncate max-w-full">Dest</span>
+                                                <div className="flex items-center gap-1.5">
+                                                    {getWeatherIcon(route.weather.destination.code)}
+                                                    <span className="text-xs font-bold text-gray-700 dark:text-gray-200">{route.weather.destination.temp}°</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            )}
+                                )
+                            }
 
                             {/* Recommendation Reason */}
                             <div className="bg-gradient-to-r from-blue-50/50 to-indigo-50/50 dark:from-blue-900/10 dark:to-indigo-900/10 rounded-xl p-3 border border-blue-100 dark:border-blue-900/30">
@@ -203,6 +199,6 @@ export function RouteList({ routes, selectedProfile, selectedRouteId, onSelectRo
                     );
                 })}
             </div>
-        </div>
+        </div >
     );
 }

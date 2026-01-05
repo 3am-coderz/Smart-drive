@@ -16,9 +16,10 @@ const TIER_WEIGHTS = {
 };
 
 const DISTANCE_PENALTIES = [
-    { maxDist: 200, factor: 1.0 },
-    { maxDist: 500, factor: 0.7 },
-    { maxDist: 800, factor: 0.4 },
+    { maxDist: 2000, factor: 1.0 },   // < 2km: Full score
+    { maxDist: 5000, factor: 0.8 },   // < 5km: High score
+    { maxDist: 10000, factor: 0.5 },  // < 10km: Medium score
+    { maxDist: 30000, factor: 0.2 },  // < 30km: Low score but included
     { maxDist: Infinity, factor: 0.0 }
 ];
 
@@ -127,7 +128,7 @@ const scoreRoute = async (routeId: string, path: LatLng[], routeLengthMeters: nu
     // For now, let's return raw weighted score scaled down, e.g. /10
     const finalScore = Math.min(10, Math.round(normalizedScore) / 10);
 
-    const explanation = generateExplanation(tierCounts, validPOIs.length);
+    const explanation = generateExplanation(tierCounts, validPOIs.length, validPOIs);
 
     return {
         routeId,
@@ -145,6 +146,8 @@ const scoreRoute = async (routeId: string, path: LatLng[], routeLengthMeters: nu
 const fetchPOIsAlongPath = async (samples: LatLng[]): Promise<TouristSpot[]> => {
     if (samples.length === 0) return [];
 
+    console.log(`[Explorer] Sample points:`, samples.map(s => `(${s.lat.toFixed(4)}, ${s.lng.toFixed(4)})`).join(', '));
+
     const bounds = getRouteQueryBounds(samples, POI_SEARCH_RADIUS);
     console.log(`[Explorer] Searching ${bounds.length} geohash bounds for ${samples.length} samples.`);
 
@@ -153,7 +156,7 @@ const fetchPOIsAlongPath = async (samples: LatLng[]): Promise<TouristSpot[]> => 
     const dbRef = ref(db, 'tourist_spots');
 
     for (const b of bounds) {
-        // console.log(`[Explorer] Query bound: ${b[0]} - ${b[1]}`);
+        console.log(`[Explorer] Query bound: ${b[0]} - ${b[1]}`);
         const q = query(
             dbRef,
             orderByChild('geohash'),
@@ -176,9 +179,13 @@ const fetchPOIsAlongPath = async (samples: LatLng[]): Promise<TouristSpot[]> => 
     const processedIds = new Set<string>();
 
     for (const snap of snapshots) {
-        if (!snap.exists()) continue;
+        if (!snap.exists()) {
+            // console.log(`[Explorer] Bound returned no results`);
+            continue;
+        }
 
         const val = snap.val();
+        console.log(`[Explorer] Bound returned ${Object.keys(val).length} spots`);
         // RTDB returns an object where keys are IDs (unless it's an array, but standard is object)
         Object.keys(val).forEach(key => {
             if (processedIds.has(key)) return;
@@ -210,12 +217,6 @@ const fetchPOIsAlongPath = async (samples: LatLng[]): Promise<TouristSpot[]> => 
                 }
             }
 
-            // LOGGING REQUESTED BY USER: Compare Sample Hash vs DB Hash
-            // Only log if it's somewhat close (e.g. within 50km) to avoid spamming 1000s of unrelated spots if the DB is huge
-            if (minDistance < 50000) {
-                console.log(`[Verifier] Spot: ${data.name} (${data.geohash}) | Closest Sample Hash: ${closestSampleHash} | Dist: ${minDistance.toFixed(0)}m | Covered? ${isWithinRange}`);
-            }
-
             if (isWithinRange) {
                 processedIds.add(key);
                 foundSpots.push({ ...data, id: key });
@@ -227,8 +228,24 @@ const fetchPOIsAlongPath = async (samples: LatLng[]): Promise<TouristSpot[]> => 
     return foundSpots;
 };
 
-const generateExplanation = (breakdown: any, total: number): string => {
+const generateExplanation = (breakdown: any, total: number, pois: TouristSpot[] = []): string => {
     if (total === 0) return "No scenic spots found on this route.";
+
+    // prioritization: Tier 1 names first
+    const majorNames = Array.from(new Set(pois
+        .filter(p => p.tier === 'tier1')
+        .map(p => p.name)));
+
+    if (majorNames.length > 0) {
+        const namesStr = majorNames.slice(0, 2).join(', '); // Show top 2
+        const remaining = total - Math.min(majorNames.length, 2);
+
+        if (remaining > 0) {
+            return `Passing ${namesStr} and ${remaining} other spots.`;
+        } else {
+            return `Passing ${namesStr}.`;
+        }
+    }
 
     const parts = [];
     if (breakdown.tier1 > 0) parts.push(`${breakdown.tier1} major attractions`);

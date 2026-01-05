@@ -158,21 +158,26 @@ export const rankRoutes = (routes: Route[], profile: DrivingProfile, travelTime:
         if (profile.id === 'fast') return a.eta - b.eta;
 
         if (profile.id === 'scenic') {
-            // If explorer data exists, use it. Otherwise fall back to duration (longer = better scenic? or just default)
-            if (a.explorerScore !== undefined && b.explorerScore !== undefined) {
-                return b.explorerScore - a.explorerScore;
+            // Primary: Tourist Spots Count
+            // Secondary: High Distance (as requested by user)
+            const poisA = a.totalPOIs || 0;
+            const poisB = b.totalPOIs || 0;
+
+            if (poisA !== poisB) {
+                return poisB - poisA; // More spots = better
             }
-            return b.eta - a.eta;
+            // Tie-breaker: Longer distance is better
+            // console.log(`[Rank] Tie for POIs (${poisA}). Dist A: ${a.distance}, Dist B: ${b.distance}. Winner: ${b.distance > a.distance ? 'B' : 'A'}`);
+            return b.distance - a.distance;
         }
 
         if (profile.id === 'safe') {
-            // Day: Activity only. Night: Activity + Lighting
-            const safetyA = a.activityScore * effectiveWeights.activity + a.lightingScore * effectiveWeights.lighting;
-            const safetyB = b.activityScore * effectiveWeights.activity + b.lightingScore * effectiveWeights.lighting;
-
-            // If safety is tied, prefer shorter ETA
-            if (safetyB === safetyA) return a.eta - b.eta;
-            return safetyB - safetyA;
+            // Purely calculated by lighting score
+            if (a.lightingScore !== b.lightingScore) {
+                return b.lightingScore - a.lightingScore; // Higher lighting = better
+            }
+            // Secondary tie-breaker: Activity score
+            return b.activityScore - a.activityScore;
         }
         const scoreA = calculateScore(a, effectiveWeights);
         const scoreB = calculateScore(b, effectiveWeights);
@@ -196,14 +201,17 @@ const calculateScore = (route: Route, weights: { eta: number, activity: number, 
 
 export const getRecommendationReason = (route: Route, profile: DrivingProfile, travelTime: string = "20:00"): string => {
     if (profile.id === 'fast') return `Shortest route: ${route.eta} mins.`;
-    if (profile.id === 'scenic') return `Longest scenic drive: ${route.eta} mins.`;
-    if (profile.id === 'safe') {
-        const isDay = isDaytime(travelTime);
-        if (isDay) {
-            return `High activity score (Daytime safety).`;
+
+    if (profile.id === 'scenic') {
+        const poiCount = route.totalPOIs || 0;
+        if (poiCount > 0) {
+            return `${poiCount} scenic spots found along this route.`;
         }
-        const totalSafety = route.activityScore + route.lightingScore;
-        return `High safety score (${totalSafety}/20).`;
+        return `Longest scenic drive: ${route.distance}km.`;
+    }
+
+    if (profile.id === 'safe') {
+        return `High lighting score (${route.lightingScore}/10) for maximum safety.`;
     }
     return 'Balanced choice.';
 };
