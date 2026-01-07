@@ -28,10 +28,10 @@ const db = getDatabase(app);
 // Path to the JSON file - adjusting to be relative to where the script is run from project root
 // Paths to the JSON files
 const FILES = [
-    path.resolve(process.cwd(), 'src/data/tourist_locations_updated.json'),
-    path.resolve(process.cwd(), 'src/data/india1.json'),
-    path.resolve(process.cwd(), 'src/data/india2.json'),
-    path.resolve(process.cwd(), 'src/data/india3.json')
+    '/home/dk/Documents/academics/projects/geo/tourist_locations_updated.json',
+    '/home/dk/Documents/academics/projects/geo/india1.json',
+    '/home/dk/Documents/academics/projects/geo/india2.json',
+    '/home/dk/Documents/academics/projects/geo/india3.json'
 ];
 
 const uploadTouristData = async () => {
