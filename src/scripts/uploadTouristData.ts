@@ -4,80 +4,101 @@ import { initializeApp } from "firebase/app";
 import * as geofire from 'geofire-common';
 import * as fs from 'fs';
 import * as path from 'path';
+import dotenv from 'dotenv';
+
+// Load environment variables from .env file
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
 // Using the config from firebaseConfig.ts (hardcoded here to rely on script execution context)
+// Using environment variables
 const firebaseConfig = {
-    apiKey: "AIzaSyD7dEziODl92Ip1_WGMEQZfYEoaVAFU9Us",
-    authDomain: "tour-b15a4.firebaseapp.com",
-    databaseURL: "https://tour-b15a4-default-rtdb.firebaseio.com/",
-    projectId: "tour-b15a4",
-    storageBucket: "tour-b15a4.firebasestorage.app",
-    messagingSenderId: "583069041570",
-    appId: "1:583069041570:web:92215a83440869250ce8fb",
-    measurementId: "G-HGZKR84HT4"
+    apiKey: process.env.VITE_FIREBASE_API_KEY,
+    authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
+    databaseURL: process.env.VITE_FIREBASE_DATABASE_URL,
+    projectId: process.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.VITE_FIREBASE_APP_ID,
+    measurementId: process.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 // Path to the JSON file - adjusting to be relative to where the script is run from project root
-const JSON_PATH = '/home/dk/Documents/academics/projects/geo/tourist_locations_updated.json';
+// Paths to the JSON files
+const FILES = [
+    '/home/dk/Documents/academics/projects/geo/tourist_locations_updated.json',
+    '/home/dk/Documents/academics/projects/geo/india1.json',
+    '/home/dk/Documents/academics/projects/geo/india2.json',
+    '/home/dk/Documents/academics/projects/geo/india3.json'
+];
 
 const uploadTouristData = async () => {
     console.log("Starting tourist data upload...");
 
-    if (!fs.existsSync(JSON_PATH)) {
-        console.error(`ERROR: File not found at ${JSON_PATH}`);
-        process.exit(1);
-    }
+    const allSpots: Record<string, any> = {};
 
-    try {
-        const rawData = fs.readFileSync(JSON_PATH, 'utf-8');
-        const spots = JSON.parse(rawData);
-
-        console.log(`Found ${Object.keys(spots).length} spots in JSON file.`);
-
-        const dbRef = ref(db, "tourist_spots");
-
-        for (const [key, spot] of Object.entries(spots)) {
-            // @ts-ignore
-            const { name, category, tier, importance_score, city, state, verified, location } = spot;
-
-            // Calculate geohash if not present or regenerate to be sure
-            const lat = location.lat;
-            const lng = location.lng;
-            const hash = geofire.geohashForLocation([lat, lng]);
-
-            const newSpot = {
-                name,
-                category,
-                tier,
-                importance_score,
-                city,
-                state: state || "Tamil Nadu",
-                verified: !!verified,
-                location: {
-                    lat,
-                    lng
-                },
-                geohash: hash,
-                last_updated: new Date().toISOString()
-            };
-
-            const spotId = key; // Use the key from JSON as ID
-            const spotRef = child(dbRef, spotId);
-
-            await set(spotRef, newSpot);
-            console.log(`✅ Uploaded: ${name} (${spotId}) -> ${hash}`);
+    // 1. Merge all data
+    for (const filePath of FILES) {
+        if (!fs.existsSync(filePath)) {
+            console.warn(`⚠️ Warning: File not found at ${filePath}, skipping.`);
+            continue;
         }
+        try {
+            const raw = fs.readFileSync(filePath, 'utf-8');
+            const data = JSON.parse(raw);
+            Object.assign(allSpots, data);
+            console.log(`Loaded ${Object.keys(data).length} spots from ${path.basename(filePath)}`);
+        } catch (err) {
+            console.error(`Error reading ${filePath}:`, err);
+        }
+    }
 
-        console.log("\nAll spots uploaded successfully!");
-        process.exit(0);
+    const totalSpots = Object.keys(allSpots).length;
+    console.log(`\nTotal spots to upload: ${totalSpots}`);
 
-    } catch (error) {
-        console.error("Upload failed:", error);
+    if (totalSpots === 0) {
+        console.error("No spots found in any file. Aborting.");
         process.exit(1);
     }
+
+    const dbRef = ref(db, "tourist_spots");
+
+    for (const [key, spot] of Object.entries(allSpots)) {
+        // @ts-ignore
+        const { name, category, tier, importance_score, city, state, verified, location } = spot;
+
+        // Calculate geohash if not present or regenerate to be sure
+        const lat = location.lat;
+        const lng = location.lng;
+        const hash = geofire.geohashForLocation([lat, lng]);
+
+        const newSpot = {
+            name,
+            category,
+            tier,
+            importance_score,
+            city,
+            state: state || "Tamil Nadu",
+            verified: !!verified,
+            location: {
+                lat,
+                lng
+            },
+            geohash: hash,
+            last_updated: new Date().toISOString()
+        };
+
+        const spotId = key; // Use the key from JSON as ID
+        const spotRef = child(dbRef, spotId);
+
+        await set(spotRef, newSpot);
+        console.log(`✅ Uploaded: ${name} (${spotId}) -> ${hash}`);
+    }
+
+    console.log("\nAll spots uploaded successfully!");
+    process.exit(0);
 };
 
 uploadTouristData();

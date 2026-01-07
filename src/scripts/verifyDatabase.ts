@@ -1,16 +1,21 @@
 
 import { ref, get, getDatabase } from 'firebase/database';
 import { initializeApp } from "firebase/app";
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Load environment variables from context (assuming script run from root)
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
 const firebaseConfig = {
-    apiKey: "AIzaSyD7dEziODl92Ip1_WGMEQZfYEoaVAFU9Us",
-    authDomain: "tour-b15a4.firebaseapp.com",
-    databaseURL: "https://tour-b15a4-default-rtdb.firebaseio.com/",
-    projectId: "tour-b15a4",
-    storageBucket: "tour-b15a4.firebasestorage.app",
-    messagingSenderId: "583069041570",
-    appId: "1:583069041570:web:92215a83440869250ce8fb",
-    measurementId: "G-HGZKR84HT4"
+    apiKey: process.env.VITE_FIREBASE_API_KEY,
+    authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
+    databaseURL: process.env.VITE_FIREBASE_DATABASE_URL,
+    projectId: process.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.VITE_FIREBASE_APP_ID,
+    measurementId: process.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 const app = initializeApp(firebaseConfig);
