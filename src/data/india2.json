@@ -1,0 +1,257 @@
+{
+  "varanasi_ghats": {
+    "name": "Varanasi Ghats",
+    "category": "religious",
+    "tier": "tier1",
+    "importance_score": 10,
+    "city": "Varanasi",
+    "state": "Uttar Pradesh",
+    "verified": true,
+    "location": {
+      "lat": 25.3167,
+      "lng": 83.0104
+    },
+    "geohash": "tue00by26w",
+    "nearby_spots": {
+      "kashi_vishwanath": true
+    }
+  },
+  "kashi_vishwanath": {
+    "name": "Kashi Vishwanath Temple",
+    "category": "religious",
+    "tier": "tier1",
+    "importance_score": 10,
+    "city": "Varanasi",
+    "state": "Uttar Pradesh",
+    "verified": true,
+    "location": {
+      "lat": 25.3108,
+      "lng": 83.0106
+    },
+    "geohash": "tu7pbzwqp5",
+    "nearby_spots": {
+      "varanasi_ghats": true
+    }
+  },
+  "kedarnath": {
+    "name": "Kedarnath Temple",
+    "category": "religious",
+    "tier": "tier1",
+    "importance_score": 10,
+    "city": "Kedarnath",
+    "state": "Uttarakhand",
+    "verified": true,
+    "location": {
+      "lat": 30.7346,
+      "lng": 79.0669
+    },
+    "geohash": "tv2nz5nf02",
+    "nearby_spots": {
+      "badrinath": true
+    }
+  },
+  "badrinath": {
+    "name": "Badrinath Temple",
+    "category": "religious",
+    "tier": "tier1",
+    "importance_score": 10,
+    "city": "Badrinath",
+    "state": "Uttarakhand",
+    "verified": true,
+    "location": {
+      "lat": 30.7433,
+      "lng": 79.4938
+    },
+    "geohash": "tv2wbutsey",
+    "nearby_spots": {
+      "kedarnath": true
+    }
+  },
+  "manali": {
+    "name": "Manali Hill Station",
+    "category": "park",
+    "tier": "tier1",
+    "importance_score": 9,
+    "city": "Manali",
+    "state": "Himachal Pradesh",
+    "verified": true,
+    "location": {
+      "lat": 32.2396,
+      "lng": 77.1887
+    },
+    "geohash": "ttwzkmp171",
+    "nearby_spots": {
+      "rohtang_pass": true
+    }
+  },
+  "rohtang_pass": {
+    "name": "Rohtang Pass",
+    "category": "park",
+    "tier": "tier1",
+    "importance_score": 9,
+    "city": "Manali",
+    "state": "Himachal Pradesh",
+    "verified": true,
+    "location": {
+      "lat": 32.3714,
+      "lng": 77.2464
+    },
+    "geohash": "ttybjv115d",
+    "nearby_spots": {
+      "manali": true
+    }
+  },
+  "dal_lake": {
+    "name": "Dal Lake",
+    "category": "park",
+    "tier": "tier1",
+    "importance_score": 9,
+    "city": "Srinagar",
+    "state": "Jammu and Kashmir",
+    "verified": true,
+    "location": {
+      "lat": 34.12,
+      "lng": 74.87
+    },
+    "geohash": "twj4peqemk",
+    "nearby_spots": {
+      "gulmarg": true
+    }
+  },
+  "gulmarg": {
+    "name": "Gulmarg",
+    "category": "park",
+    "tier": "tier1",
+    "importance_score": 9,
+    "city": "Gulmarg",
+    "state": "Jammu and Kashmir",
+    "verified": true,
+    "location": {
+      "lat": 34.05,
+      "lng": 74.38
+    },
+    "geohash": "twhcsw9ges",
+    "nearby_spots": {
+      "dal_lake": true
+    }
+  },
+  "konark_sun_temple": {
+    "name": "Konark Sun Temple",
+    "category": "historic",
+    "tier": "tier1",
+    "importance_score": 10,
+    "city": "Konark",
+    "state": "Odisha",
+    "verified": true,
+    "location": {
+      "lat": 19.8908,
+      "lng": 86.1003
+    },
+    "geohash": "tgt1pm0263",
+    "nearby_spots": {
+      "jagannath_temple": true
+    }
+  },
+  "jagannath_temple": {
+    "name": "Jagannath Temple",
+    "category": "religious",
+    "tier": "tier1",
+    "importance_score": 10,
+    "city": "Puri",
+    "state": "Odisha",
+    "verified": true,
+    "location": {
+      "lat": 19.8049,
+      "lng": 85.8179
+    },
+    "geohash": "tgt08v6eyh",
+    "nearby_spots": {
+      "konark_sun_temple": true
+    }
+  },
+  "sundarbans": {
+    "name": "Sundarbans National Park",
+    "category": "park",
+    "tier": "tier1",
+    "importance_score": 9,
+    "city": "South 24 Parganas",
+    "state": "West Bengal",
+    "verified": true,
+    "location": {
+      "lat": 21.9497,
+      "lng": 88.9
+    },
+    "geohash": "tgzhygz420",
+    "nearby_spots": {
+      "victoria_memorial": true
+    }
+  },
+  "victoria_memorial": {
+    "name": "Victoria Memorial",
+    "category": "historic",
+    "tier": "tier1",
+    "importance_score": 9,
+    "city": "Kolkata",
+    "state": "West Bengal",
+    "verified": true,
+    "location": {
+      "lat": 22.5449,
+      "lng": 88.3425
+    },
+    "geohash": "tunb621j93",
+    "nearby_spots": {
+      "sundarbans": true
+    }
+  },
+  "statue_of_unity": {
+    "name": "Statue of Unity",
+    "category": "monument",
+    "tier": "tier1",
+    "importance_score": 10,
+    "city": "Kevadia",
+    "state": "Gujarat",
+    "verified": true,
+    "location": {
+      "lat": 21.838,
+      "lng": 73.7191
+    },
+    "geohash": "teukjx2xed",
+    "nearby_spots": {
+      "gir_forest": true
+    }
+  },
+  "gir_forest": {
+    "name": "Gir National Park",
+    "category": "park",
+    "tier": "tier1",
+    "importance_score": 9,
+    "city": "Junagadh",
+    "state": "Gujarat",
+    "verified": true,
+    "location": {
+      "lat": 21.1356,
+      "lng": 70.7967
+    },
+    "geohash": "tef25p8ef9",
+    "nearby_spots": {
+      "statue_of_unity": true
+    }
+  },
+  "elephanta_caves": {
+    "name": "Elephanta Caves",
+    "category": "historic",
+    "tier": "tier1",
+    "importance_score": 9,
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "verified": true,
+    "location": {
+      "lat": 18.9633,
+      "lng": 72.9314
+    },
+    "geohash": "te7ggs5j0z",
+    "nearby_spots": {
+      "gateway_of_india": true
+    }
+  }
+}

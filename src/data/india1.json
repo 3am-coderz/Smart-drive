@@ -1,0 +1,240 @@
+{
+  "taj_mahal": {
+    "name": "Taj Mahal",
+    "category": "historic",
+    "tier": "tier1",
+    "importance_score": 10,
+    "city": "Agra",
+    "state": "Uttar Pradesh",
+    "verified": true,
+    "location": {
+      "lat": 27.1751,
+      "lng": 78.0421
+    },
+    "geohash": "tsz6xghd2t",
+    "nearby_spots": {
+      "agra_fort": true
+    }
+  },
+  "agra_fort": {
+    "name": "Agra Fort",
+    "category": "historic",
+    "tier": "tier1",
+    "importance_score": 9,
+    "city": "Agra",
+    "state": "Uttar Pradesh",
+    "verified": true,
+    "location": {
+      "lat": 27.1795,
+      "lng": 78.0211
+    },
+    "geohash": "tsz6x7vhp6",
+    "nearby_spots": {
+      "taj_mahal": true
+    }
+  },
+  "jaipur_hawa_mahal": {
+    "name": "Hawa Mahal",
+    "category": "historic",
+    "tier": "tier1",
+    "importance_score": 9,
+    "city": "Jaipur",
+    "state": "Rajasthan",
+    "verified": true,
+    "location": {
+      "lat": 26.9239,
+      "lng": 75.8267
+    },
+    "geohash": "tsvcjmr744",
+    "nearby_spots": {
+      "amber_fort": true
+    }
+  },
+  "amber_fort": {
+    "name": "Amber Fort",
+    "category": "historic",
+    "tier": "tier1",
+    "importance_score": 9,
+    "city": "Jaipur",
+    "state": "Rajasthan",
+    "verified": true,
+    "location": {
+      "lat": 26.9855,
+      "lng": 75.8513
+    },
+    "geohash": "tsvcw091zm",
+    "nearby_spots": {
+      "jaipur_hawa_mahal": true
+    }
+  },
+  "gateway_of_india": {
+    "name": "Gateway of India",
+    "category": "monument",
+    "tier": "tier1",
+    "importance_score": 9,
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "verified": true,
+    "location": {
+      "lat": 18.922,
+      "lng": 72.8347
+    },
+    "geohash": "te7g9ksses",
+    "nearby_spots": {
+      "marine_drive": true
+    }
+  },
+  "marine_drive": {
+    "name": "Marine Drive",
+    "category": "park",
+    "tier": "tier1",
+    "importance_score": 8,
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "verified": true,
+    "location": {
+      "lat": 18.944,
+      "lng": 72.823
+    },
+    "geohash": "te7gc0shfc",
+    "nearby_spots": {
+      "gateway_of_india": true
+    }
+  },
+  "charminar": {
+    "name": "Charminar",
+    "category": "historic",
+    "tier": "tier1",
+    "importance_score": 9,
+    "city": "Hyderabad",
+    "state": "Telangana",
+    "verified": true,
+    "location": {
+      "lat": 17.3616,
+      "lng": 78.4747
+    },
+    "geohash": "tepfc8xd9h",
+    "nearby_spots": {
+      "golconda_fort": true
+    }
+  },
+  "golconda_fort": {
+    "name": "Golconda Fort",
+    "category": "historic",
+    "tier": "tier1",
+    "importance_score": 9,
+    "city": "Hyderabad",
+    "state": "Telangana",
+    "verified": true,
+    "location": {
+      "lat": 17.3833,
+      "lng": 78.4011
+    },
+    "geohash": "tepfbh9cn1",
+    "nearby_spots": {
+      "charminar": true
+    }
+  },
+  "mysore_palace": {
+    "name": "Mysore Palace",
+    "category": "historic",
+    "tier": "tier1",
+    "importance_score": 10,
+    "city": "Mysuru",
+    "state": "Karnataka",
+    "verified": true,
+    "location": {
+      "lat": 12.3052,
+      "lng": 76.6552
+    },
+    "geohash": "tdnw024dgx",
+    "nearby_spots": {
+      "chamundi_hills": true
+    }
+  },
+  "chamundi_hills": {
+    "name": "Chamundi Hills",
+    "category": "park",
+    "tier": "tier2",
+    "importance_score": 8,
+    "city": "Mysuru",
+    "state": "Karnataka",
+    "verified": true,
+    "location": {
+      "lat": 12.2746,
+      "lng": 76.6703
+    },
+    "geohash": "tdntbdt8er",
+    "nearby_spots": {
+      "mysore_palace": true
+    }
+  },
+  "golden_temple": {
+    "name": "Golden Temple",
+    "category": "religious",
+    "tier": "tier1",
+    "importance_score": 10,
+    "city": "Amritsar",
+    "state": "Punjab",
+    "verified": true,
+    "location": {
+      "lat": 31.62,
+      "lng": 74.8765
+    },
+    "geohash": "ttt5zu5rug",
+    "nearby_spots": {
+      "jallianwala_bagh": true
+    }
+  },
+  "jallianwala_bagh": {
+    "name": "Jallianwala Bagh",
+    "category": "historic",
+    "tier": "tier1",
+    "importance_score": 9,
+    "city": "Amritsar",
+    "state": "Punjab",
+    "verified": true,
+    "location": {
+      "lat": 31.6207,
+      "lng": 74.8801
+    },
+    "geohash": "ttt5zuq5bv",
+    "nearby_spots": {
+      "golden_temple": true
+    }
+  },
+  "qutub_minar": {
+    "name": "Qutub Minar",
+    "category": "historic",
+    "tier": "tier1",
+    "importance_score": 9,
+    "city": "Delhi",
+    "state": "Delhi",
+    "verified": true,
+    "location": {
+      "lat": 28.5245,
+      "lng": 77.1855
+    },
+    "geohash": "ttnfk2sz28",
+    "nearby_spots": {
+      "india_gate": true
+    }
+  },
+  "india_gate": {
+    "name": "India Gate",
+    "category": "monument",
+    "tier": "tier1",
+    "importance_score": 9,
+    "city": "Delhi",
+    "state": "Delhi",
+    "verified": true,
+    "location": {
+      "lat": 28.6129,
+      "lng": 77.2295
+    },
+    "geohash": "ttnfv2uf1z",
+    "nearby_spots": {
+      "qutub_minar": true
+    }
+  }
+}
