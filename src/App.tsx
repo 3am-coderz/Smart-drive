@@ -100,22 +100,35 @@ function App() {
     const fetchNetworkTime = async () => {
         setIsSyncingTime(true);
         try {
-            const response = await fetch('https://worldtimeapi.org/api/ip');
-            const data = await response.json();
-            if (data.datetime) {
-                const dateObj = new Date(data.datetime);
-                const hours = dateObj.getHours().toString().padStart(2, '0');
-                const minutes = dateObj.getMinutes().toString().padStart(2, '0');
-                const dateStr = dateObj.toISOString().split('T')[0];
-
-                handleTimeChange(`${hours}:${minutes}`);
-                handleDateChange(dateStr);
+            // Try primary API first (timeapi.io is generally more reliable)
+            const response = await fetch('https://timeapi.io/api/Time/current/zone?timeZone=Asia/Kolkata');
+            if (response.ok) {
+                const data = await response.json();
+                if (data.dateTime) {
+                    const dateObj = new Date(data.dateTime);
+                    updateTimeState(dateObj);
+                    return;
+                }
             }
         } catch (error) {
-            console.error("Failed to fetch time", error);
-        } finally {
-            setIsSyncingTime(false);
+            console.warn("Primary time API failed, trying fallback...", error);
         }
+
+        // Fallback: Use local system time if API fails
+        console.log("Using local system time as fallback");
+        const now = new Date();
+        updateTimeState(now);
+        setIsSyncingTime(false);
+    };
+
+    const updateTimeState = (dateObj: Date) => {
+        const hours = dateObj.getHours().toString().padStart(2, '0');
+        const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+        const dateStr = dateObj.toISOString().split('T')[0];
+
+        handleTimeChange(`${hours}:${minutes}`);
+        handleDateChange(dateStr);
+        setIsSyncingTime(false);
     };
 
     return (
@@ -201,7 +214,7 @@ function App() {
                             </div>
                         </div>
 
-                        <InputSection onSearch={handleSearch} isLoading={isLoading} />
+                        <InputSection onSearch={handleSearch} isLoading={isLoading} isLoaded={isLoaded} />
                     </section>
 
                     {error && (
