@@ -82,3 +82,5 @@ The application will be available at `http://localhost:5173`.
 -   `npm run preview`: Locally preview the production build.
 -   `npm run upload-tourist-data`: Seeder script to upload tourist data to Firebase. **Note:** This script relies on absolute paths to data files on the original development machine and will not work on other devices without modification.
 -   `npm run verify-db`: Script to verify database content.
+
+thank you 
